@@ -1,0 +1,11 @@
+{
+  "name": "itad/config",
+  "autoload": {
+    "psr-4": {
+      "IsThereAnyDeal\\Config\\": "src"
+    }
+  },
+  "require": {
+    "ext-json": "*"
+  }
+}
