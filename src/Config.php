@@ -5,39 +5,39 @@ use IsThereAnyDeal\Config\Exceptions\ConfigException;
 
 class Config
 {
-    private static array $config;
+    private array $config;
 
     /**
      * @param array<class-string, string> $map
      */
-    private static array $sectionMap = [];
+    private array $sectionMap = [];
 
     /**
      * @template T
      * @param array<class-string<T>, T> $map
      */
-    private static array $configObjects = [];
+    private array $configObjects = [];
 
-    public static function loadJsonFile(string $path, ?string $section=null): void {
+    public function loadJsonFile(string $path, ?string $section=null): void {
         $data = json_decode(file_get_contents($path), true);
 
         if (isset($data['@extend'])) {
             $baseFile = dirname(realpath($path)).DIRECTORY_SEPARATOR.$data['@extend'];
-            self::loadJsonFile($baseFile);
+            $this->loadJsonFile($baseFile);
         }
 
         if (is_null($section)) {
-            self::$config = array_replace_recursive(self::$config ?? [], $data);
+            $this->config = array_replace_recursive($this->config ?? [], $data);
         } else {
-            self::$config[$section] = array_replace_recursive(self::$config[$section] ?? [], $data);
+            $this->config[$section] = array_replace_recursive($this->config[$section] ?? [], $data);
         }
     }
 
     /**
      * @param array<class-string, string> $map
      */
-    public static function map(array $map): void {
-        self::$sectionMap = $map;
+    public function map(array $map): void {
+        $this->sectionMap = $map;
     }
 
     /**
@@ -46,20 +46,20 @@ class Config
      * @return T
      * @throws ConfigException
      */
-    public static function getConfig(string $configClass): object {
-        if (!isset(self::$configObjects[$configClass])) {
-            if (!isset(self::$sectionMap[$configClass])) {
+    public function getConfig(string $configClass): object {
+        if (!isset($this->configObjects[$configClass])) {
+            if (!isset($this->sectionMap[$configClass])) {
                 throw new ConfigException("No mapped config section for $configClass");
             }
-            $section = self::$sectionMap[$configClass];
+            $section = $this->sectionMap[$configClass];
 
-            if (!isset(self::$config[$section])) {
+            if (!isset($this->config[$section])) {
                 throw new ConfigException("No config data for $configClass");
             }
 
-            self::$configObjects[$configClass] = new $configClass(self::$config[$section]);
+            $this->configObjects[$configClass] = new $configClass($this->config[$section]);
         }
 
-        return self::$configObjects[$configClass];
+        return $this->configObjects[$configClass];
     }
 }
